@@ -1,5 +1,5 @@
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello DevOps from Atullayev Gaziz");
+        System.out.println("Hello DevOps from Atullayev Gaziz with CI");
     }
 }
