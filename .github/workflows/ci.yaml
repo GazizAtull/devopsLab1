@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  JAVA_VERSION: '17'
+  MAIN_CLASS: 'Main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Compile
+        shell: bash
+        run: |
+          mkdir -p out
+          if [ -d src ]; then find src -name "*.java" > sources.txt; else find . -maxdepth 1 -name "*.java" > sources.txt; fi
+          if [ ! -s sources.txt ]; then echo "No .java files found"; exit 1; fi
+          javac -d out @sources.txt
+      - name: Package JAR
+        shell: bash
+        run: |
+          printf "Manifest-Version: 1.0\nMain-Class: %s\n" "$MAIN_CLASS" > MANIFEST.MF
+          (cd out && jar cfm ../app.jar ../MANIFEST.MF .)
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: app.jar
+
+  run:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+      - name: Run
+        run: java -jar app.jar
